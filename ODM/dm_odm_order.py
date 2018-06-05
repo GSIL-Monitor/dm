@@ -11,31 +11,21 @@ Input:        args1:开始时间-结束时间  [YYYYMMDD-YYYYMMDD]
 Output:       (^_^)
 '''
 
-import sys
-import re
-import os
-import ftplib
-import ftputil
-import urllib
-import urllib2
-import socket
-import paramiko
-import random
-import time
-import subprocess
-import threadpool
+import sys, re, os,csv
+import ftplib, ftputil, urllib, urllib2, socket, paramiko
+import random, time, subprocess, threadpool
 from datetime import datetime
 from HTMLParser import HTMLParser
 # from posixpath import join as urljoin
-from dm_odm_order_core import WEBORDER, ReadYaml
+from dm_odm_order_core import WEBORDER01,WEBORDER02, ReadYaml
 from configobj import ConfigObj
 from dateutil.relativedelta import relativedelta
 from PB import pb_time, pb_sat, pb_name
 from PB.CSC.pb_csc_console import LogServer, SocketServer, MailServer_imap
 import socks
+from StringIO import StringIO 
 
 socket.setdefaulttimeout(120)  # 设置访问socket连接超时时间
-
 
 def run(satID, ymd):
     # 获取每个卫星，传感器的参数
@@ -50,7 +40,6 @@ def run(satID, ymd):
             OrderGlobalProduct(satID, ymd)
         else:
             OrderOrbitProduct(satID, ymd)
-
 
 def OrderWebProduct(satID, ymd):
     # 获取每个卫星，传感器的参数
@@ -98,8 +87,7 @@ def OrderWebProduct(satID, ymd):
         combine_timeList = CombineTimeList(timeList)
     else:
         # Log.error(u'----没有有效的交叉点时间')
-        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 没有有效的交叉点时间' %
-                  (ymd, satID, sat, sensor, product, interval))
+        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 没有有效的交叉点时间' % (ymd, satID, sat, sensor, product, interval))
         return
 
 #     allServerList = []  # 获取FTP清单文件
@@ -109,8 +97,7 @@ def OrderWebProduct(satID, ymd):
     orderFile = os.path.join(ORDER_DIR, satID, ymd + '.txt')
 
     for ctime in combine_timeList:
-        time_range = ctime[0].strftime(
-            '%Y%m%d%H%M%S') + '_' + ctime[1].strftime('%Y%m%d%H%M%S')
+        time_range = ctime[0].strftime('%Y%m%d%H%M%S') + '_' + ctime[1].strftime('%Y%m%d%H%M%S')
         stime = ctime[0].strftime('%Y%m%d %H:%M:%S')
         etime = ctime[1].strftime('%Y%m%d %H:%M:%S')
         o_stime = ctime[0].strftime('%Y-%m-%d %H:%M:%S')
@@ -119,23 +106,17 @@ def OrderWebProduct(satID, ymd):
         # 检查java订购ID是否有效
         ID = CheckIdAvailable(FULL_ID_DIR)
         ycfg = ReadYaml(sat, sensor)
-        weborder = WEBORDER(ycfg)
-        weborder.login_fn()
+        if ycfg.init_type == '1':
+            weborder = WEBORDER01(ycfg)
+        else:
+            weborder = WEBORDER02(ycfg)       
+
         if ID is None:  # id号不可用则重新订购
             time.sleep(int(random.uniform(1, 10)))
-#             cmd = '%s,-jar,%s,%s+%s,%s,%s' % (javaName, FullJarName, sat, sensor, java_stime, java_etime)
-
             try:
-                ID = weborder.get_ordernum(sat, sensor, o_stime, o_etime)
-#                 P1 = subprocess.Popen(cmd.split(','), stdout=subprocess.PIPE)
-#                 time.sleep(120)
-#                 if P1.poll() == None:
-#                     P1.kill()
-#                 else:
-#                     out = P1.communicate()[0]
-#                     ID = out.split('=')[1].strip()
-#
-#                 P1.wait()
+                weborder.login_fn()
+                ID = weborder.get_ordernum(o_stime, o_etime)
+
             except:
                 ID = None
 
@@ -144,24 +125,20 @@ def OrderWebProduct(satID, ymd):
                 mailFile = os.path.join(FULL_ID_DIR, ID + '.eml')
 #                 print 'mailFile    :', mailFile
                 WriteOrderNumber(mailFile)
-                Log.info(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 下单成功' % (
-                    ymd, satID, sat, sensor, product, interval, time_range, ID))
+                Log.info(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 下单成功' % (ymd, satID, sat, sensor, product, interval, time_range, ID))
             else:
-                Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 下单失败' % (
-                    ymd, satID, sat, sensor, product, interval, time_range, ID))
+                Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 下单失败' % (ymd, satID, sat, sensor, product, interval, time_range, ID))
                 continue
         else:  # 如果已经订购过，则直接处理
             # Log.info(u'----时段: [%s] ID: [%s] ID号可用' % (time_range, ID))
             mailFile = os.path.join(FULL_ID_DIR, ID + '.eml')
 #             print 'FULL_ID_DIR is :', FULL_ID_DIR
             if os.path.isfile(mailFile) and os.path.getsize(mailFile) > 0:
-                Log.info(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] ID号可用' % (
-                    ymd, satID, sat, sensor, product, interval, time_range, ID))
+                Log.info(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] ID号可用' % (ymd, satID, sat, sensor, product, interval, time_range, ID))
                 f_host, f_user, f_pawd, f_path = getftpinfo(mailFile)
                 time.sleep(int(random.uniform(1, 10)))
                 try:
-                    serverList = GetServerList(
-                        pact, f_host, f_user, f_pawd, port, f_path, regList, ymd)
+                    serverList = GetServerList(pact, f_host,sensor,f_user, f_pawd, port, f_path, regList, ymd)
                 except Exception as e:
                     print str(e)
                     continue
@@ -173,8 +150,7 @@ def OrderWebProduct(satID, ymd):
                     fileSize = each.split()[1]
                     KeyWorld = '_'.join(fileName.split('_')[0:5])
                     if KeyWorld not in dict_Flst.keys():
-                        dict_Flst[KeyWorld] = [
-                            fileName, fileSize, f_host, f_path]
+                        dict_Flst[KeyWorld] = [fileName, fileSize, f_host, f_path]
 #                 newServerLst = dict_Flst.values()
 #
 #
@@ -194,19 +170,17 @@ def OrderWebProduct(satID, ymd):
                     if (m.findmail()):
                         # Log.info(u'----时段: [%s] ID: [%s] 邮件已到' % (time_range, ID))
                         m.savemail(mailFile, True)
-                        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 保存邮件' % (
-                            ymd, satID, sat, sensor, product, interval, time_range, ID))
+                        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 保存邮件' % (ymd, satID, sat, sensor, product, interval, time_range, ID))
                         # u'delete 订购邮件'
                     else:
                         # Log.info(u'----时段: [%s] ID: [%s] 邮件未到' % (time_range, ID))
-                        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 邮件未到' % (
-                            ymd, satID, sat, sensor, product, interval, time_range, ID))
+                        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 邮件未到' % (ymd, satID, sat, sensor, product, interval, time_range, ID))
                     m.close()
                     m.logout()
                 except Exception as e:
-                    #                     print (u'mail----%s' % str(e))
-                    Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 获取邮件信息超时' % (
-                        ymd, satID, sat, sensor, product, interval, time_range, ID))
+#                     print (u'mail----%s' % str(e))
+                    Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 获取邮件信息超时' % (ymd, satID, sat, sensor, product, interval, time_range, ID))
+
 
     # 将写入字典的文件进行信息提取，形成订单列表和订单信息列表
     F_serverList = []
@@ -216,8 +190,7 @@ def OrderWebProduct(satID, ymd):
         file_host = serverList[2]
         file_path = serverList[3]
         F_serverList.append(filename + "   " + filesize + '\n')
-        url = pact + '://' + file_host + ':' + \
-            port + file_path + '/' + filename + '\n'
+        url = pact + '://' + file_host + ':' + port + file_path + '/' + filename + '\n'
         allorderList.append(url)
 
     # 写入订单信息文件
@@ -225,17 +198,14 @@ def OrderWebProduct(satID, ymd):
         infoFile = os.path.join(ORDER_DIR, satID, ymd + '.info')
         WriteFile(infoFile, F_serverList)
     else:
-        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s FTP清单获取失败' %
-                  (ymd, satID, sat, sensor, product, interval))
+        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s FTP清单获取失败' % (ymd, satID, sat, sensor, product, interval))
         return
     # 写入订单文件
     if len(allorderList) != 0:
-        Log.info(u'---- WEB订购  [%s] [%s] %s %s %s %s 订购成功' %
-                 (ymd, satID, sat, sensor, product, interval))
+        Log.info(u'---- WEB订购  [%s] [%s] %s %s %s %s 订购成功' % (ymd, satID, sat, sensor, product, interval))
         WriteFile(orderFile, allorderList)
     else:
-        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 订购失败' %
-                  (ymd, satID, sat, sensor, product, interval))
+        Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 订购失败' % (ymd, satID, sat, sensor, product, interval))
 
 
 def getftpinfo(mailFile):
@@ -272,7 +242,6 @@ def getftpinfo(mailFile):
                 f_path = '/' + line.split()[1].strip() + '/001'
     return f_host, f_user, f_pawd, f_path
 
-
 def WriteOrderNumber(MailFile):
     '''
     把订单号保存到本地
@@ -282,7 +251,6 @@ def WriteOrderNumber(MailFile):
     if not os.path.isfile(MailFile):
         fp = open(MailFile, 'w')
         fp.close()
-
 
 def is_num_by_except(satID):
     '''
@@ -295,7 +263,6 @@ def is_num_by_except(satID):
             return True
     except ValueError:
         return False
-
 
 def CheckIdAvailable(ID_DIR):
     '''
@@ -328,7 +295,6 @@ def CheckIdAvailable(ID_DIR):
     else:
         return None
 
-
 def OrderOrbitProduct(satID, ymd):
     # 获取每个卫星，传感器的参数
     sat = inCfg['ORDER'][satID]['SELF_SAT']
@@ -344,6 +310,7 @@ def OrderOrbitProduct(satID, ymd):
     user = inCfg['ORDER'][satID]['USER']
     pawd = inCfg['ORDER'][satID]['PAWD']
     sdir = inCfg['ORDER'][satID]['SDIR']
+    SELF_SENSOR = inCfg['ORDER'][satID]['SELF_SENSOR']
     regList = inCfg['ORDER'][satID]['SELF_REG']
 
     stime = datetime.strptime(ymd, '%Y%m%d')
@@ -365,32 +332,28 @@ def OrderOrbitProduct(satID, ymd):
     # 卫星-卫星预报
     sat_satList = ReadForecastFile_sat(satID, ymd)
     timeList.extend(sat_satList)
-
     # 将重叠部分时间进行扩展形成新的时间段（在JAVA订购方式时会需要，避免重复订购）
     if len(timeList) != 0:
         combine_timeList = CombineTimeList(timeList)
     else:
-        #         Log.error(u'----没有有效的交叉点时间')
-        Log.error(u'---- 选择订购  [%s] [%s] %s %s %s %s 没有有效的交叉点时间 ' %
-                  (ymd, satID, sat, sensor, product, interval))
+#         Log.error(u'----没有有效的交叉点时间')
+        Log.error(u'---- 选择订购  [%s] [%s] %s %s %s %s 没有有效的交叉点时间 ' % (ymd, satID, sat, sensor, product, interval))
         return
 
     time.sleep(int(random.uniform(1, 10)))
     # 获取FTP上的数据信息列表
-    serverList = GetServerList(
-        pact, host, user, pawd, port, s_path, regList, ymd)
-    F_serverList = [
-        each + '\n' for each in serverList if not each.startswith('.')]
+    serverList = GetServerList(pact, host, SELF_SENSOR,user, pawd, port, s_path, regList, ymd)
+    F_serverList = [each + '\n' for each in serverList if not each.startswith('.')]
     if len(F_serverList) != 0:
         infoFile = os.path.join(ORDER_DIR, satID, ymd + '.info')
         WriteFile(infoFile, F_serverList)
     else:
-        #         Log.error(u'----FTP清单获取失败')
-        Log.error(u'---- 选择订购  [%s] [%s] %s %s %s %s FTP清单获取失败' %
-                  (ymd, satID, sat, sensor, product, interval))
+#         Log.error(u'----FTP清单获取失败')
+        Log.error(u'---- 选择订购  [%s] [%s] %s %s %s %s FTP清单获取失败' % (ymd, satID, sat, sensor, product, interval))
         return
-
+    # pdb.set_trace()
     # 根据FTP列表获取文件上的时间信息和观测时长
+
     FileInfoList = GetFileInfo(F_serverList)
 
     # 创建轨道产品订单文件
@@ -404,20 +367,17 @@ def OrderOrbitProduct(satID, ymd):
             s_ymdhms2 = timelist[0]
             e_ymdhms2 = timelist[1]
             if InCrossTime(s_ymdhms1, e_ymdhms1, s_ymdhms2, e_ymdhms2):
-                url = surl + ':' + port + '/' + s_path + '/' + FileName + '\n'
+                url = surl +  '/' + s_path + '/' + FileName + '\n'
                 orderList.append(url)
                 break
 
     if len(orderList) != 0:
-        #         Log.info(u'----订购成功')
-        Log.info(u'---- 选择订购  [%s] [%s] %s %s %s %s 订购成功' %
-                 (ymd, satID, sat, sensor, product, interval))
+#         Log.info(u'----订购成功')
+        Log.info(u'---- 选择订购  [%s] [%s] %s %s %s %s 订购成功' % (ymd, satID, sat, sensor, product, interval))
         WriteFile(orderFile, orderList)
     else:
-        #         Log.info(u'选择订购  [%s] [%s] %s %s %s %s 失败' % (ymd, satID, sat, sensor, product, interval))
-        Log.error(u'---- 选择订购  [%s] [%s] %s %s %s %s 订购失败' %
-                  (ymd, satID, sat, sensor, product, interval))
-
+#         Log.info(u'选择订购  [%s] [%s] %s %s %s %s 失败' % (ymd, satID, sat, sensor, product, interval))
+        Log.error(u'---- 选择订购  [%s] [%s] %s %s %s %s 订购失败' % (ymd, satID, sat, sensor, product, interval))
 
 def OrderGlobalProduct(satID, ymd):
     # 获取每个卫星，传感器的参数
@@ -435,6 +395,7 @@ def OrderGlobalProduct(satID, ymd):
     pawd = inCfg['ORDER'][satID]['PAWD']
     sdir = inCfg['ORDER'][satID]['SDIR']
     reg = inCfg['ORDER'][satID]['SELF_REG']
+    SELF_SENSOR = inCfg['ORDER'][satID]['SELF_SENSOR']
     interval = inCfg['ORDER'][satID]['SELF_INTERVAL']
 #     namerule = inCfg['ORDER'][satID]['SELF_NAMERULE']
 
@@ -448,42 +409,35 @@ def OrderGlobalProduct(satID, ymd):
     sdir = sdir.replace('%MM', ymd[4:6])
     sdir = sdir.replace('%DD', ymd[6:8])
     s_path = sdir.replace('%JJJ', jjj)
-
     # 创建全球产品订单文件
     orderFile = os.path.join(ORDER_DIR, satID, ymd + '.txt')
     # 获取服务器数据信息列表
     try:
-        serverList = GetServerList(
-            pact, host, user, pawd, port, s_path, reg, ymd)
+        serverList = GetServerList(pact, host, SELF_SENSOR, user, pawd, port, s_path, reg, ymd)
     except:
         serverList = []
     # 删除list前俩行.和..
-    F_serverList = [
-        each + '\n' for each in serverList if not each.startswith('.')]
+    F_serverList = [each + '\n' for each in serverList if not each.startswith('.')]
     # 记录获取的服务器数据清单信息
     if len(F_serverList) != 0:
         infoFile = os.path.join(ORDER_DIR, satID, ymd + '.info')
         WriteFile(infoFile, F_serverList)
     else:
-        Log.error(u'---- 全球订购  [%s] [%s] %s %s %s %s FTP清单获取失败' %
-                  (ymd, satID, sat, sensor, product, interval))
+        Log.error(u'---- 全球订购  [%s] [%s] %s %s %s %s FTP清单获取失败' % (ymd, satID, sat, sensor, product, interval))
         return
 
     for Line in F_serverList:
-        #         if newYmd in Line:
+#         if newYmd in Line:
         FileName = Line.split()[0].strip()
-        url = surl + ':' + port + s_path + '/' + FileName + '\n'
+        url = surl + '/' + s_path + '/' + FileName + '\n'
         orderList.append(url)
 
     if len(orderList) != 0:
-        Log.info(u'---- 全球订购  [%s] [%s] %s %s %s %s 订购成功' %
-                 (ymd, satID, sat, sensor, product, interval))
+        Log.info(u'---- 全球订购  [%s] [%s] %s %s %s %s 订购成功' % (ymd, satID, sat, sensor, product, interval))
         WriteFile(orderFile, orderList)
     else:
-        #         Log.info(u'----订购失败')
-        Log.error(u'---- 全球订购  [%s] [%s] %s %s %s %s 订购失败' %
-                  (ymd, satID, sat, sensor, product, interval))
-
+#         Log.info(u'----订购失败')
+        Log.error(u'---- 全球订购  [%s] [%s] %s %s %s %s 订购失败' % (ymd, satID, sat, sensor, product, interval))
 
 def ReadForecastFile_area(satID, ymd):
     '''
@@ -525,14 +479,11 @@ def ReadForecastFile_area(satID, ymd):
                             continue
                     else:
                         pass
-                    s_cross_time = datetime.strptime(
-                        '%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
-                    e_cross_time = datetime.strptime(
-                        '%s %s' % (ymd, e_hms), '%Y%m%d %H:%M:%S')
+                    s_cross_time = datetime.strptime('%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
+                    e_cross_time = datetime.strptime('%s %s' % (ymd, e_hms), '%Y%m%d %H:%M:%S')
                     timeList.append([s_cross_time, e_cross_time])
 
     return timeList
-
 
 def ReadForecastFile_fix(satID, ymd):
     '''
@@ -566,8 +517,7 @@ def ReadForecastFile_fix(satID, ymd):
                     if fix in Line and ymd in Line:
                         # 进行时间处理，交叉时间点变为时间段
                         s_hms = Line.split()[1].strip()
-                        cross_time = datetime.strptime(
-                            '%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
+                        cross_time = datetime.strptime('%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
                         secs = int(dict_fix_group_sec[fix_group])
 
                         s_cross_time = cross_time - relativedelta(seconds=secs)
@@ -601,18 +551,17 @@ def ReadForecastFile_sat(satID, ymd):
         dict_sat_sec[target_sat[i]] = target_sat_sec[i]
         dict_sat_cross_num[target_sat[i]] = target_sat_cross_num[i]
 
+
     # print '！！！！！！！！！！！！！！！！！！！！！！！！！！'
 
     for sat2 in target_sat:
         sat2_secs = int(dict_sat_sec[sat2])
         sat2_cross_num = int(dict_sat_cross_num[sat2])
         if sat1 in geoList or sat2 in geoList:
-            timeList = ReadForecastFile_GEO_LEO(
-                sat1, sat2, sat2_secs, ymd, satType)
+            timeList = ReadForecastFile_GEO_LEO(sat1, sat2, sat2_secs, ymd, satType)
         else:
             # 20180510 增加过滤交叉点功能，配置保留交叉点的数量target_sat_cross_num
-            timeList = ReadForecastFile_LEO_LEO(
-                sat1, sat2, sat2_secs, ymd, satType, sat2_cross_num)
+            timeList = ReadForecastFile_LEO_LEO(sat1, sat2, sat2_secs, ymd, satType, sat2_cross_num)
         allTimeList.extend(timeList)
 
     return allTimeList
@@ -718,14 +667,12 @@ def ReadForecastFile_LEO_LEO(sat1, sat2, sat2_secs, ymd, satType, sat2_cross_num
                 s_hms = Line.split()[1].strip()
 #                 lat = float(Line.split()[2].strip())
 #                 lon = float(Line.split()[3].strip())
-                cross_time = datetime.strptime(
-                    '%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
+                cross_time = datetime.strptime('%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
             elif SatLocation(crossFile, sat1) == 2:  # 如果订购卫星在后
                 s_hms = Line.split()[4].strip()
 #                 lat = float(Line.split()[5].strip())
 #                 lon = float(Line.split()[6].strip())
-                cross_time = datetime.strptime(
-                    '%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
+                cross_time = datetime.strptime('%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
             else:
                 continue
 
@@ -778,10 +725,8 @@ def ReadForecastFile_GEO_LEO(sat1, sat2, sat2_secs, ymd, satType):
                     continue
             else:
                 pass
-            cross_time1 = datetime.strptime(
-                '%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
-            cross_time2 = datetime.strptime(
-                '%s %s' % (ymd, e_hms), '%Y%m%d %H:%M:%S')
+            cross_time1 = datetime.strptime('%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
+            cross_time2 = datetime.strptime('%s %s' % (ymd, e_hms), '%Y%m%d %H:%M:%S')
             # 目标卫星阈值秒
             s_cross_time = cross_time1 - relativedelta(seconds=sat2_secs)
             e_cross_time = cross_time2 + relativedelta(seconds=sat2_secs)
@@ -791,7 +736,6 @@ def ReadForecastFile_GEO_LEO(sat1, sat2, sat2_secs, ymd, satType):
                 continue
             timeList.append([s_cross_time, e_cross_time])
     return timeList
-
 
 def SatLocation(ForecastFile, sat):
     '''
@@ -806,7 +750,6 @@ def SatLocation(ForecastFile, sat):
         return 2
     else:
         return 0
-
 
 def CombineTimeList(TimeList):
     # 将时间段list中有重叠的时间段进行融合为新的时间段
@@ -830,7 +773,6 @@ def CombineTimeList(TimeList):
 
     return newTimeList
 
-
 def InCrossTime(s_ymdhms1, e_ymdhms1, s_ymdhms2, e_ymdhms2):
     '''
     判断俩个时间段是否有交叉
@@ -845,7 +787,7 @@ def InCrossTime(s_ymdhms1, e_ymdhms1, s_ymdhms2, e_ymdhms2):
         return False
 
 
-def GetServerList(pact, host, user, pawd, port, s_path, regList, ymd):
+def GetServerList(pact, host,SELF_SENSOR, user, pawd, port, s_path, regList, ymd):
     '''
     获取服务器上指定目录的数据列表
     格式：文件名  大小(字节)
@@ -854,18 +796,17 @@ def GetServerList(pact, host, user, pawd, port, s_path, regList, ymd):
     ftpList = []
     # 读取协议信息
     if pact == 'sftp':
-        ftpList = use_sftp_getList(
-            host, user, pawd, port, s_path, regList, ymd)
+        ftpList = use_sftp_getList(host, user, pawd, port, s_path, regList, ymd)
     elif pact == 'ftp':
         ftpList = use_ftp_getList(host, user, pawd, port, s_path, regList, ymd)
+    elif pact == 'https'and SELF_SENSOR == 'MODIS' :
+        ftpList = use_https_getList_MODIS(pact, host,SELF_SENSOR, user, pawd, port, s_path, regList, ymd)
     elif pact == 'http' or pact == 'https':
-        ftpList = use_http_getList(
-            pact, host, user, pawd, port, s_path, regList, ymd)
+        ftpList = use_http_getList(pact, host, user, pawd, port, s_path, regList, ymd)
     else:
         Log.info(u'----不支持此协议:%s' % pact)
 
     return ftpList
-
 
 def use_sftp_getList(host, user, pawd, port, s_path, regList, ymd):
 
@@ -875,7 +816,7 @@ def use_sftp_getList(host, user, pawd, port, s_path, regList, ymd):
         tt.connect(username=user, password=pawd)
         sftp = paramiko.SFTPClient.from_transport(tt)
         sftp.chdir(s_path)
-        Lines = sftp.listdir(s_path)
+        Lines = sftp.listdir (s_path)
         # 获取目录下所有文件目录
         for FileName in Lines:
             for reg in regList:  # 符合正则的进行处理
@@ -892,13 +833,10 @@ def use_sftp_getList(host, user, pawd, port, s_path, regList, ymd):
 
     return FileList
 
-
 def use_ftp_getList(host, user, pawd, port, s_path, regList, ymd):
 
     FileList = []
-
     class MySession(ftplib.FTP):
-
         def __init__(self, FTP, userid, password, port):
             """Act like ftplib.FTP's constructor but connect to another port."""
             ftplib.FTP.__init__(self)
@@ -906,8 +844,7 @@ def use_ftp_getList(host, user, pawd, port, s_path, regList, ymd):
             self.login(userid, password)
 
     try:
-        FTP = ftputil.FTPHost(
-            host, user, pawd, port=port, session_factory=MySession)
+        FTP = ftputil.FTPHost(host, user, pawd, port=port, session_factory=MySession)
         FTP.chdir(s_path)
         nameList = FTP.listdir(FTP.curdir)
         for name in nameList:
@@ -929,8 +866,75 @@ def use_ftp_getList(host, user, pawd, port, s_path, regList, ymd):
         print (u'----%s' % str(e))
 
     return FileList
+def geturl(url, token=None, out=None):
+    headers = { 'user-agent' :'tis/download.py_1.0--' + sys.version.replace('\n','').replace('\r','') }
+    if not token is None:
+        headers['Authorization'] = 'Bearer ' + token
+    try:
+        if sys.version_info.major == 2:
+            import urllib2
+            try:
+                fh = urllib2.urlopen(urllib2.Request(url, headers=headers))
+                if out is None:
+                    return fh.read()
+                else:
+                    shutil.copyfileobj(fh, out)
+            except urllib2.HTTPError as e:
+                print('HTTP GET error code: %d' % e.code())
+                print('HTTP GET error message: %s' % e.message)
+            except urllib2.URLError as e:
+                print('Failed to make request: %s' % e.reason)
+            return None
 
+        else:
+            from urllib.request import urlopen, Request, URLError, HTTPError
+            try:
+                fh = urlopen(Request(url, headers=headers))
+                if out is None:
+                    return fh.read().decode('utf-8')
+                else:
+                    shutil.copyfileobj(fh, out)
+            except HTTPError as e:
+                print('HTTP GET error code: %d' % e.code())
+                print('HTTP GET error message: %s' % e.message)
+            except URLError as e:
+                print('Failed to make request: %s' % e.reason)
+            return None
 
+    except AttributeError:
+        # OS X Python 2 and 3 don't support tlsv1.1+ therefore... curl
+        import subprocess
+        try:
+            args = ['curl', '--fail', '-sS', '-L', '--get', url]
+            for (k,v) in headers.items():
+                args.extend(['-H', ': '.join([k, v])])
+            if out is None:
+                # python3's subprocess.check_output returns stdout as a byte string
+                result = subprocess.check_output(args)
+                return result.decode('utf-8') if isinstance(result, bytes) else result
+            else:
+                subprocess.call(args, stdout=out)
+        except subprocess.CalledProcessError as e:
+            print('curl GET error message: %' + (e.message if hasattr(e, 'message') else e.output))
+        return None
+
+def use_https_getList_MODIS(pact, host,SELF_SENSOR, user, pawd, port, s_path, regList, ymd):
+
+    FileList = []
+    src = pact+'://'+host+'/'+ s_path
+    tok='FEB56222-63BA-11E8-B399-F01EAE849760'  #应用密钥
+    files = [ f for f in csv.DictReader(StringIO(geturl('%s.csv' % src, tok)), skipinitialspace=True) ]
+    for f in files:
+        try:
+            filesize = int(f['size'])
+            Name = f['name']
+            Line = Name + ' ' + str(filesize)
+            FileList.append(Line)
+        except Exception , e:
+            print "ERROR: " , e
+            FileList = []
+
+    return FileList
 def use_http_getList(pact, host, user, pawd, port, s_path, regList, ymd):
 
     FileList = []
@@ -966,35 +970,32 @@ def use_http_getList(pact, host, user, pawd, port, s_path, regList, ymd):
 #                         size = 0
                     Line = Name + ' ' + str(size)
                     FileList.append(Line)
-                except Exception, e:
-                    print "ERROR: ", e
+                except Exception , e:
+                    print "ERROR: " , e
                     FileList = []
 
     return FileList
-
-
 def GetFileSize(html, FileName):
-    Filestring = re.findall(
-        r'<a.*?href="%s">%s.*<\/td>' % (FileName, FileName), html)
+    Filestring = re.findall(r'<a.*?href="%s">%s.*<\/td>' % (FileName, FileName), html)
     if len(Filestring) <= 0:
         return 0
 
-    for Fstring in Filestring:
+    for Fstring in Filestring :
         a = Fstring
         b = a.split('<td align="right">')[-1]
         FileSize = b.split('</td>')[0]
         break
 
-    if 'G' not in FileSize and 'M' not in FileSize and 'K' not in FileSize:
+    if 'G' not in FileSize and 'M' not in FileSize and 'K' not in FileSize :
         return int(float(FileSize))
     fileSizenounit = FileSize.strip()[:-1]
     Unit = FileSize.strip()[-1]
     if Unit in 'G':
-        return int(float(fileSizenounit) * 1000 * 1000 * 1024)
+        return  int(float(fileSizenounit) * 1000 * 1000 * 1024)
     if Unit in 'M':
-        return int(float(fileSizenounit) * 1000 * 1000)
+        return  int(float(fileSizenounit) * 1000 * 1000)
     if Unit in 'K':
-        return int(float(fileSizenounit) * 1000)
+        return  int(float(fileSizenounit) * 1000)
 
 
 class DM(HTMLParser):
@@ -1002,7 +1003,6 @@ class DM(HTMLParser):
     '''
     网页解析
     '''
-
     def __init__(self):
         self.strlst = []
         self.a = False
@@ -1057,7 +1057,6 @@ def getHtml(url):
     resp.close()
     return html
 
-
 def GetFileInfo(FtpList):
     '''
     通过正则类对数据进行解析
@@ -1073,7 +1072,6 @@ def GetFileInfo(FtpList):
         FileInfoList.append([Filename, info.dt_s, info.dt_e])
 
     return FileInfoList
-
 
 def WriteFile(filename, lines):
     '''
@@ -1160,8 +1158,7 @@ else:
 
 # 设置代理信息，如果服务器无法连接外网需要设置代理连接
 if 'ON' in use_proxy:
-    socks.set_default_proxy(
-        socks.SOCKS5, PROXY_HOST, PROXY_PORT, True, PROXY_USER, PROXY_PAWD)
+    socks.set_default_proxy(socks.SOCKS5, PROXY_HOST, PROXY_PORT, True, PROXY_USER, PROXY_PAWD)
     socket.socket = socks.socksocket
 
 # 获取开机线程的个数，开启线程池。获取订单对时间和编号进行并行操作
@@ -1203,14 +1200,13 @@ if len(args) == 2:
         NumDateDict1[satID].append(newYmd)
     # 把第一个字典的时间去重，放到第二个字典中
     for satID in NumDateDict1.keys():
-        NumDateDict2[satID] = sorted(
-            set(NumDateDict1[satID]), key=NumDateDict1[satID].index)
+        NumDateDict2[satID] = sorted(set(NumDateDict1[satID]), key=NumDateDict1[satID].index)
     print NumDateDict2
     # 放入线程字典
     for satID in NumDateDict2.keys():
         for ymd in NumDateDict2[satID]:
             # 定义线程池调用函数的参数。单个参数定义一个list，多个参数根据字典格式进行传参
-            dict_List = {'satID': satID, 'ymd': ymd}
+            dict_List = {'satID':satID, 'ymd':ymd}
             args_List.append((None, dict_List))
 
     # 存在卫星数据 ，进行线程的调用
@@ -1241,21 +1237,19 @@ elif len(args) == 0:
             NumDateDict1[satID] = []
             NumDateDict2[satID] = []
         for rdays in rolldays:
-            ymd = (
-                datetime.utcnow() - relativedelta(days=int(rdays))).strftime('%Y%m%d')
+            ymd = (datetime.utcnow() - relativedelta(days=int(rdays))).strftime('%Y%m%d')
             newYmd = pb_time.ymd2ymd(satID, interval, namerule, ymd)
             # 把新时间放到字段中
             NumDateDict1[satID].append(newYmd)
     # 把第一个字典的时间去重，放到第二个字典中
     for satID in NumDateDict1.keys():
-        NumDateDict2[satID] = sorted(
-            set(NumDateDict1[satID]), key=NumDateDict1[satID].index)
+        NumDateDict2[satID] = sorted(set(NumDateDict1[satID]), key=NumDateDict1[satID].index)
     print NumDateDict2
     # 放入线程字典
     for satID in NumDateDict2.keys():
         for ymd in NumDateDict2[satID]:
             # 定义线程池调用函数的参数。单个参数定义一个list，多个参数根据字典格式进行传参
-            dict_List = {'satID': satID, 'ymd': ymd}
+            dict_List = {'satID':satID, 'ymd':ymd}
             args_List.append((None, dict_List))
     # 存在卫星数据 ，进行线程的调用
     if len(args_List) > 0:
