@@ -1,0 +1,451 @@
+web01: # 目前支持 iasi viirs cris j01
+  user: xuna1
+  pawd: gsicsgsics
+  mail: fy3gsics@kingtansin.com
+
+METOP-A+IASI:
+  url_type: https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ''
+  - orb_pattern: ''
+  - dsname_pattern: ^IASI(_CCR|_L02|_XXX_1C|-OLR_V1R0)_M\d\d(_V|_)(\d{14}|\d{8}|\d{6})(_\d{8}(.{0,65})|Z_\d{14}Z(.{0,65}))?$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Datatype: IASI1CAIP
+  - Satellite: M02
+  - Node: A
+  - max_sum_hits: 1000
+  - lrg_max_sum_hits: 6000
+  - brk_srch_hrs_qs: 12
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: IASI
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - cocoon-action: PlaceOrder
+  - order_now_IASI: 'on'
+METOP-B+IASI:
+  url_type: https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ''
+  - orb_pattern: ''
+  - dsname_pattern: ^IASI(_CCR|_L02|_XXX_1C|-OLR_V1R0)_M\d\d(_V|_)(\d{14}|\d{8}|\d{6})(_\d{8}(.{0,65})|Z_\d{14}Z(.{0,65}))?$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Datatype: IASI1CAIP
+  - Satellite: M01
+  - Node: A
+  - max_sum_hits: 1000
+  - lrg_max_sum_hits: 6000
+  - brk_srch_hrs_qs: 12
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: IASI
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - cocoon-action: PlaceOrder
+  - order_now_IASI: 'on'
+NOAA-20+CRIS_SDR:
+  url_type:  https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ^(NPP)\d{12}$
+  - orb_pattern: ^(\d{1,})$
+  - dsname_pattern: ^((\w{5})_(NPP|J01)|\w{5}-\w{5}_(NPP|J01))_D20\d\d(0[1-9]|1[012])([012][0-9]|3[01]).*$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Datatype: CRIS_SDRF
+  - Datatype: CRIS_GEO
+  - Satellite: J01
+  - max_sum_hits: 1000
+  - lrg_max_sum_hits: 3600
+  - brk_srch_hrs_qs: 72
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: CRIS_SDR
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - np_comp_opt: 7
+  - np_geo_pack: Y
+  - np_subset: N
+  - cocoon-action: PlaceOrder
+  - order_now_CRIS_SDR: 'on'
+METOP-A+GOME:
+  url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=GOME&submit.x=25&submit.y=6
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ''
+  - orb_pattern: ''
+  - dsname_pattern: ^GOME_XXX_1B_M\d\d_20\d\d(0[1-9]|1[012])([012][0-9]|3[01])(.{0,83})$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Satellite: M02
+  - max_sum_hits: 1000
+  - lrg_max_sum_hits: 3000
+  - brk_srch_hrs_qs: 48
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: GOME
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - cocoon-action: PlaceOrder
+  - order_now_GOME: 'on'
+METOP-B+GOME:
+  url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=GOME&submit.x=25&submit.y=6
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ''
+  - orb_pattern: ''
+  - dsname_pattern: ^GOME_XXX_1B_M\d\d_20\d\d(0[1-9]|1[012])([012][0-9]|3[01])(.{0,83})$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Satellite: M01
+  - max_sum_hits: 1000
+  - lrg_max_sum_hits: 3000
+  - brk_srch_hrs_qs: 48
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: GOME
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - cocoon-action: PlaceOrder
+  - order_now_GOME: 'on'
+NPP+CRIS2:
+  url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ^(NPP)\d{12}$
+  - orb_pattern: ^(\d{1,})$
+  - dsname_pattern: ^((\w{5})_(NPP|J01)|\w{5}-\w{5}_(NPP|J01))_D20\d\d(0[1-9]|1[012])([012][0-9]|3[01]).*$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Datatype: CRIS_SDRF
+  - Datatype: CRIS_SDR
+  - Datatype: CRIS_GEO
+  - Satellite: NPP
+  - max_sum_hits: 1000
+  - lrg_max_sum_hits: 3600
+  - brk_srch_hrs_qs: 72
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: CRIS_SDR
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - np_comp_opt: 7
+  - np_geo_pack: Y
+  - np_subset: N
+  - cocoon-action: PlaceOrder
+  - order_now_CRIS_SDR: on
+NPP+CRIS:
+  url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ^(NPP)\d{12}$
+  - orb_pattern: ^(\d{1,})$
+  - dsname_pattern: ^((\w{5})_(NPP|J01)|\w{5}-\w{5}_(NPP|J01))_D20\d\d(0[1-9]|1[012])([012][0-9]|3[01]).*$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Datatype: CRIS_SDR
+  - Datatype: CRIS_GEO
+  - Satellite: NPP
+  - max_sum_hits: 1000
+  - lrg_max_sum_hits: 3000
+  - brk_srch_hrs_qs: 72
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: CRIS_SDR
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - np_comp_opt: 7
+  - np_geo_pack: Y
+  - np_subset: N
+  - cocoon-action: PlaceOrder
+  - order_now_CRIS_SDR: 'on'
+NPP+ATMS:
+  url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=ATMS_SDR&submit.x=36&submit.y=9
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ^(NPP)\d{12}$
+  - orb_pattern: ^(\d{1,})$
+  - dsname_pattern: ^((\w{5})_(NPP|J01)|\w{5}-\w{5}_(NPP|J01))_D20\d\d(0[1-9]|1[012])([012][0-9]|3[01]).*$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Datatype: ATMS_SDR
+  - Datatype: ATMSSDRGEO
+  - Satellite: NPP
+  - max_sum_hits: 1000
+  - lrg_max_sum_hits: 3000
+  - brk_srch_hrs_qs: 36
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: ATMS_SDR
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - np_comp_opt: 7
+  - np_geo_pack: Y
+  - np_subset: N
+  - cocoon-action: PlaceOrder
+  - order_now_ATMS_SDR: 'on'
+NPP+VIIRS:
+  url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=VIIRS_SDR&submit.x=25&submit.y=13
+  body_data:
+  - search_opt: SC
+  - gid_pattern: ^(NPP)\d{12}$
+  - orb_pattern: ^(\d{1,})$
+  - dsname_pattern: ^((\w{5})_(NPP|J01)|\w{5}-\w{5}_(NPP|J01))_D20\d\d(0[1-9]|1[012])([012][0-9]|3[01]).*$
+  - nlat: 90
+  - wlon: -180
+  - elon: 180
+  - slat: -90
+  - minDiff: 0.0
+  - data_start: None
+  - data_end: None
+  - max_days_val: None
+  - start_date: None
+  - start_time: None
+  - end_date: None
+  - end_time: None
+  - between_through: T
+  - Datatype: VIIRSM1SDR
+  - Datatype: VIIRSM2SDR
+  - Datatype: VIIRSM3SDR
+  - Datatype: VIIRSM4SDR
+  - Datatype: VIIRSM5SDR
+  - Datatype: VIIRSM6SDR
+  - Datatype: VIIRSM7SDR
+  - Datatype: VIIRSM8SDR
+  - Datatype: VIIRSM9SDR
+  - Datatype: VIIRM10SDR
+  - Datatype: VIIRM11SDR
+  - Datatype: VIIRM12SDR
+  - Datatype: VIIRM13SDR
+  - Datatype: VIIRM14SDR
+  - Datatype: VIIRM15SDR
+  - Datatype: VIIRM16SDR
+  - Datatype: VIIRSMOGEO
+  - Satellite: NPP
+  - max_sum_hits: 2000
+  - lrg_max_sum_hits: 4000
+  - brk_srch_hrs_qs: 6
+  - bulk_order: N
+  - limit_search: Y
+  - max_lat_range: 180
+  - max_lon_range: 360
+  - datatype_family: VIIRS_SDR
+  mail_data:
+  - page : cart
+  - encryption: ''
+  - ekey: N
+  - delivery_method: ''
+  - price_est: 0
+  - quantity_est: 0
+  - product_number:  ''
+  - order_size: None
+  - email: None
+  - order_comment: ''
+  - deliv_manifest_opt: N
+  - deliv_checksum_opt: N
+  - np_comp_opt: 7
+  - np_geo_pack: Y
+  - np_subset: N
+  - cocoon-action: PlaceOrder
+  - order_now_VIIRS_SDR: 'on'
+# [web02] #目前支持 CALIOP
+# url  = 
+# user = gsics-kingtansin  
+# pawd = Gsics112
+# mail = fy3gsics@kingtansin.com

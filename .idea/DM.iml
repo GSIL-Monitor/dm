@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="jdk" jdkName="Python 2.7.9 (G:\Python27\python.exe)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="DP" />
+    <orderEntry type="module" module-name="DS" />
+    <orderEntry type="module" module-name="control" />
+    <orderEntry type="module" module-name="PB" />
+    <orderEntry type="module" module-name="main" />
+    <orderEntry type="module" module-name="main" />
+    <orderEntry type="module" module-name="main" />
+    <orderEntry type="module" module-name="beijingju" />
+  </component>
+</module>
