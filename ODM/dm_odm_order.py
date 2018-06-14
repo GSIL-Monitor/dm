@@ -1,19 +1,8 @@
 # coding: utf-8
-__author__ = 'wangpeng'
-
-'''
-FileName:     dm_odm_order.py
-Description:  订购卫星数据
-Author:       wangpeng
-Date:         2015-08-21
-version:      1.0.0.050821_beat
-Input:        args1:开始时间-结束时间  [YYYYMMDD-YYYYMMDD]
-Output:       (^_^)
-'''
-
 import sys
 import re
 import os
+import csv
 import ftplib
 import ftputil
 import urllib
@@ -27,13 +16,24 @@ import threadpool
 from datetime import datetime
 from HTMLParser import HTMLParser
 # from posixpath import join as urljoin
-from dm_odm_order_core import WEBORDER, ReadYaml
+from dm_odm_order_core import WEBORDER01, WEBORDER02, ReadYaml
 from configobj import ConfigObj
 from dateutil.relativedelta import relativedelta
 from PB import pb_time, pb_sat, pb_name
 from PB.CSC.pb_csc_console import LogServer, SocketServer, MailServer_imap
 import socks
+from StringIO import StringIO
+__author__ = 'wangpeng'
 
+'''
+FileName:     dm_odm_order.py
+Description:  订购卫星数据
+Author:       wangpeng
+Date:         2015-08-21
+version:      1.0.0.050821_beat
+Input:        args1:开始时间-结束时间  [YYYYMMDD-YYYYMMDD]
+Output:       (^_^)
+'''
 socket.setdefaulttimeout(120)  # 设置访问socket连接超时时间
 
 
@@ -119,23 +119,17 @@ def OrderWebProduct(satID, ymd):
         # 检查java订购ID是否有效
         ID = CheckIdAvailable(FULL_ID_DIR)
         ycfg = ReadYaml(sat, sensor)
-        weborder = WEBORDER(ycfg)
-        weborder.login_fn()
+        if ycfg.init_type == '1':
+            weborder = WEBORDER01(ycfg)
+        else:
+            weborder = WEBORDER02(ycfg)
+
         if ID is None:  # id号不可用则重新订购
             time.sleep(int(random.uniform(1, 10)))
-#             cmd = '%s,-jar,%s,%s+%s,%s,%s' % (javaName, FullJarName, sat, sensor, java_stime, java_etime)
-
             try:
-                ID = weborder.get_ordernum(sat, sensor, o_stime, o_etime)
-#                 P1 = subprocess.Popen(cmd.split(','), stdout=subprocess.PIPE)
-#                 time.sleep(120)
-#                 if P1.poll() == None:
-#                     P1.kill()
-#                 else:
-#                     out = P1.communicate()[0]
-#                     ID = out.split('=')[1].strip()
-#
-#                 P1.wait()
+                weborder.login_fn()
+                ID = weborder.get_ordernum(o_stime, o_etime)
+
             except:
                 ID = None
 
@@ -161,7 +155,7 @@ def OrderWebProduct(satID, ymd):
                 time.sleep(int(random.uniform(1, 10)))
                 try:
                     serverList = GetServerList(
-                        pact, f_host, f_user, f_pawd, port, f_path, regList, ymd)
+                        pact, f_host, sensor, f_user, f_pawd, port, f_path, regList, ymd)
                 except Exception as e:
                     print str(e)
                     continue
@@ -344,6 +338,7 @@ def OrderOrbitProduct(satID, ymd):
     user = inCfg['ORDER'][satID]['USER']
     pawd = inCfg['ORDER'][satID]['PAWD']
     sdir = inCfg['ORDER'][satID]['SDIR']
+    SELF_SENSOR = inCfg['ORDER'][satID]['SELF_SENSOR']
     regList = inCfg['ORDER'][satID]['SELF_REG']
 
     stime = datetime.strptime(ymd, '%Y%m%d')
@@ -365,7 +360,6 @@ def OrderOrbitProduct(satID, ymd):
     # 卫星-卫星预报
     sat_satList = ReadForecastFile_sat(satID, ymd)
     timeList.extend(sat_satList)
-
     # 将重叠部分时间进行扩展形成新的时间段（在JAVA订购方式时会需要，避免重复订购）
     if len(timeList) != 0:
         combine_timeList = CombineTimeList(timeList)
@@ -378,7 +372,7 @@ def OrderOrbitProduct(satID, ymd):
     time.sleep(int(random.uniform(1, 10)))
     # 获取FTP上的数据信息列表
     serverList = GetServerList(
-        pact, host, user, pawd, port, s_path, regList, ymd)
+        pact, host, SELF_SENSOR, user, pawd, port, s_path, regList, ymd)
     F_serverList = [
         each + '\n' for each in serverList if not each.startswith('.')]
     if len(F_serverList) != 0:
@@ -389,8 +383,9 @@ def OrderOrbitProduct(satID, ymd):
         Log.error(u'---- 选择订购  [%s] [%s] %s %s %s %s FTP清单获取失败' %
                   (ymd, satID, sat, sensor, product, interval))
         return
-
+    # pdb.set_trace()
     # 根据FTP列表获取文件上的时间信息和观测时长
+
     FileInfoList = GetFileInfo(F_serverList)
 
     # 创建轨道产品订单文件
@@ -404,7 +399,7 @@ def OrderOrbitProduct(satID, ymd):
             s_ymdhms2 = timelist[0]
             e_ymdhms2 = timelist[1]
             if InCrossTime(s_ymdhms1, e_ymdhms1, s_ymdhms2, e_ymdhms2):
-                url = surl + ':' + port + '/' + s_path + '/' + FileName + '\n'
+                url = surl + '/' + s_path + '/' + FileName + '\n'
                 orderList.append(url)
                 break
 
@@ -435,6 +430,7 @@ def OrderGlobalProduct(satID, ymd):
     pawd = inCfg['ORDER'][satID]['PAWD']
     sdir = inCfg['ORDER'][satID]['SDIR']
     reg = inCfg['ORDER'][satID]['SELF_REG']
+    SELF_SENSOR = inCfg['ORDER'][satID]['SELF_SENSOR']
     interval = inCfg['ORDER'][satID]['SELF_INTERVAL']
 #     namerule = inCfg['ORDER'][satID]['SELF_NAMERULE']
 
@@ -448,13 +444,12 @@ def OrderGlobalProduct(satID, ymd):
     sdir = sdir.replace('%MM', ymd[4:6])
     sdir = sdir.replace('%DD', ymd[6:8])
     s_path = sdir.replace('%JJJ', jjj)
-
     # 创建全球产品订单文件
     orderFile = os.path.join(ORDER_DIR, satID, ymd + '.txt')
     # 获取服务器数据信息列表
     try:
         serverList = GetServerList(
-            pact, host, user, pawd, port, s_path, reg, ymd)
+            pact, host, SELF_SENSOR, user, pawd, port, s_path, reg, ymd)
     except:
         serverList = []
     # 删除list前俩行.和..
@@ -472,7 +467,7 @@ def OrderGlobalProduct(satID, ymd):
     for Line in F_serverList:
         #         if newYmd in Line:
         FileName = Line.split()[0].strip()
-        url = surl + ':' + port + s_path + '/' + FileName + '\n'
+        url = surl + '/' + s_path + '/' + FileName + '\n'
         orderList.append(url)
 
     if len(orderList) != 0:
@@ -845,7 +840,7 @@ def InCrossTime(s_ymdhms1, e_ymdhms1, s_ymdhms2, e_ymdhms2):
         return False
 
 
-def GetServerList(pact, host, user, pawd, port, s_path, regList, ymd):
+def GetServerList(pact, host, SELF_SENSOR, user, pawd, port, s_path, regList, ymd):
     '''
     获取服务器上指定目录的数据列表
     格式：文件名  大小(字节)
@@ -858,6 +853,9 @@ def GetServerList(pact, host, user, pawd, port, s_path, regList, ymd):
             host, user, pawd, port, s_path, regList, ymd)
     elif pact == 'ftp':
         ftpList = use_ftp_getList(host, user, pawd, port, s_path, regList, ymd)
+    elif pact == 'https'and SELF_SENSOR == 'MODIS':
+        ftpList = use_https_getList_MODIS(
+            pact, host, SELF_SENSOR, user, pawd, port, s_path, regList, ymd)
     elif pact == 'http' or pact == 'https':
         ftpList = use_http_getList(
             pact, host, user, pawd, port, s_path, regList, ymd)
@@ -927,6 +925,82 @@ def use_ftp_getList(host, user, pawd, port, s_path, regList, ymd):
         FTP.close()
     except Exception as e:
         print (u'----%s' % str(e))
+
+    return FileList
+
+
+def geturl(url, token=None, out=None):
+    headers = {'user-agent': 'tis/download.py_1.0--' +
+               sys.version.replace('\n', '').replace('\r', '')}
+    if not token is None:
+        headers['Authorization'] = 'Bearer ' + token
+    try:
+        if sys.version_info.major == 2:
+            import urllib2
+            try:
+                fh = urllib2.urlopen(urllib2.Request(url, headers=headers))
+                if out is None:
+                    return fh.read()
+                else:
+                    shutil.copyfileobj(fh, out)
+            except urllib2.HTTPError as e:
+                print('HTTP GET error code: %d' % e.code())
+                print('HTTP GET error message: %s' % e.message)
+            except urllib2.URLError as e:
+                print('Failed to make request: %s' % e.reason)
+            return None
+
+        else:
+            from urllib.request import urlopen, Request, URLError, HTTPError
+            try:
+                fh = urlopen(Request(url, headers=headers))
+                if out is None:
+                    return fh.read().decode('utf-8')
+                else:
+                    shutil.copyfileobj(fh, out)
+            except HTTPError as e:
+                print('HTTP GET error code: %d' % e.code())
+                print('HTTP GET error message: %s' % e.message)
+            except URLError as e:
+                print('Failed to make request: %s' % e.reason)
+            return None
+
+    except AttributeError:
+        # OS X Python 2 and 3 don't support tlsv1.1+ therefore... curl
+        import subprocess
+        try:
+            args = ['curl', '--fail', '-sS', '-L', '--get', url]
+            for (k, v) in headers.items():
+                args.extend(['-H', ': '.join([k, v])])
+            if out is None:
+                # python3's subprocess.check_output returns stdout as a byte
+                # string
+                result = subprocess.check_output(args)
+                return result.decode('utf-8') if isinstance(result, bytes) else result
+            else:
+                subprocess.call(args, stdout=out)
+        except subprocess.CalledProcessError as e:
+            print('curl GET error message: %' +
+                  (e.message if hasattr(e, 'message') else e.output))
+        return None
+
+
+def use_https_getList_MODIS(pact, host, SELF_SENSOR, user, pawd, port, s_path, regList, ymd):
+
+    FileList = []
+    src = pact + '://' + host + '/' + s_path
+    tok = 'FEB56222-63BA-11E8-B399-F01EAE849760'  # 应用密钥
+    files = [f for f in csv.DictReader(
+        StringIO(geturl('%s.csv' % src, tok)), skipinitialspace=True)]
+    for f in files:
+        try:
+            filesize = int(f['size'])
+            Name = f['name']
+            Line = Name + ' ' + str(filesize)
+            FileList.append(Line)
+        except Exception, e:
+            print "ERROR: ", e
+            FileList = []
 
     return FileList
 
