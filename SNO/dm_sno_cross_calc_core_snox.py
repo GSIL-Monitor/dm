@@ -8,11 +8,14 @@ import os
 import sys
 import warnings
 
-from PB.pb_space import distance_GreatCircle, distance_GreatCircle_np, solar_zen
+from PB.pb.sat import solar_zen
+from PB.pb_space import distance_GreatCircle, distance_GreatCircle_np
 from PB.pb_time import ymd_plus, get_local_time
 from dm_sno_cross_calc_map import draw_fixed, draw_polar, draw_world, draw_china
 from shapely.geometry import LineString
 import numpy as np
+
+
 reload(sys)
 sys.setdefaultencoding('utf8')
 
