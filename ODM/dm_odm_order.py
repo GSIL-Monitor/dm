@@ -32,7 +32,6 @@ import csv
 from configobj import ConfigObj
 from dateutil.relativedelta import relativedelta
 import socks
-sys.path.append('E:\KY\git')
 from PB import pb_time, pb_sat, pb_name
 from PB.CSC.pb_csc_console import LogServer, SocketServer, MailServer_imap
 from dm_odm_order_core import WEBORDER01, WEBORDER02, ReadYaml
