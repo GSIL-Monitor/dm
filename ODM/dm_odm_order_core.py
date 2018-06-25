@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import re
-# import pdb
-import yaml
+import sys
 import urllib
-# import urllib2
+
 import requests
-# from datetime import datetime
 import urllib3
+import yaml
+# import urllib2
+# from datetime import datetime
 urllib3.disable_warnings()
 
 # __Author__ = "yushuai"
@@ -309,7 +309,7 @@ class WEBORDER02(object):
 
 
 if __name__ == '__main__':
-    ycfg = ReadYaml('JPSS-1', 'CRIS')
+    ycfg = ReadYaml('METOP-A', 'IASI')
     # ycfg = ReadYaml('CALIPSO', 'CALIOP')
     if ycfg.init_type == '1':
         weborder = WEBORDER01(ycfg)
@@ -318,11 +318,12 @@ if __name__ == '__main__':
 
     weborder.login_fn()
     Number = weborder.get_ordernum(
-        '2017-12-16 01:08:22',
-        '2017-12-16 01:24:22')
-    # Number = weborder.get_ordernum(
-    #     '2018-01-01 04:00:00',
-    #     '2018-01-01 04:10:00')
+        '2018-06-19 10:33:16',
+        '2018-06-19 10:39:16')
+#     Number = weborder.get_ordernum(
+#         '2018-06-19 02:57:09',
+#         '2018-06-19 03:03:09')
+    # 20180619 02:57:09 20180619 03:03:09
 
     print 'ordernum=', Number
-    print 'JPSS-1+CRIS'
+    print 'METOP-A+IASI'
