@@ -4,7 +4,7 @@ web01: # 目前支持 iasi viirs cris j01
   mail: 1029966237@qq.com #fy3gsics@kingtansin.com
 
   METOP-A+IASI:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI
+   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI # url_type: https://www.bou.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=IASI&submit.x=21&submit.y=4
    body_data:
    - search_opt: SC
    - gid_pattern: ''
@@ -25,7 +25,7 @@ web01: # 目前支持 iasi viirs cris j01
    - between_through: T
    - Datatype: IASI1CAIP
    - Satellite: M02
-   - Node: A
+   - Node: B
    - max_sum_hits: 1000
    - lrg_max_sum_hits: 6000
    - brk_srch_hrs_qs: 12
@@ -71,7 +71,7 @@ web01: # 目前支持 iasi viirs cris j01
    - between_through: T
    - Datatype: IASI1CAIP
    - Satellite: M01
-   - Node: A
+   - Node: B
    - max_sum_hits: 1000
    - lrg_max_sum_hits: 6000
    - brk_srch_hrs_qs: 12
