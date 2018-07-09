@@ -14,30 +14,32 @@ Output:       (^_^)
 from HTMLParser import HTMLParser
 from StringIO import StringIO
 from datetime import datetime
+import csv
 import ftplib
-import ftputil
+import os
+import random
+import re
+import socket
+import subprocess
+import sys
+import time
 import urllib
 import urllib2
-import socket
-import paramiko
-import random
-import time
-import subprocess
-import threadpool
-import sys
-import re
-import os
-import csv
 
 from configobj import ConfigObj
 from dateutil.relativedelta import relativedelta
+import ftputil
+import paramiko
 import socks
+import threadpool
+# sys.path.append('E:\KY\git')
+
 from PB import pb_time, pb_sat, pb_name
 from PB.CSC.pb_csc_console import LogServer, SocketServer, MailServer_imap
 from dm_odm_order_core import WEBORDER01, WEBORDER02, ReadYaml
+
+
 # from posixpath import join as urljoin
-
-
 socket.setdefaulttimeout(120)  # 设置访问socket连接超时时间
 
 
@@ -636,7 +638,7 @@ def jump_cross_point(crossFile, snoxFile, save_cross_num, dayNight):
 
         # 黑白过滤
         dayNightLines = []
-        print '黑白过滤前 交叉点数量 %d' % len(bodyLines)
+        print u'黑白过滤前 交叉点数量 %d' % len(bodyLines)
         for Line in bodyLines:
             ymd = Line.split()[0].strip()
             hms = Line.split()[1].strip()
@@ -654,7 +656,7 @@ def jump_cross_point(crossFile, snoxFile, save_cross_num, dayNight):
                 pass
 
         lens = len(dayNightLines)
-        print '黑白过滤后 交叉点数 %d' % lens
+        print u'黑白过滤后 交叉点数 %d' % lens
 
         if lens <= save_cross_num:
             Lines1 = dayNightLines
@@ -667,7 +669,7 @@ def jump_cross_point(crossFile, snoxFile, save_cross_num, dayNight):
             newBodyLines = dayNightLines[::step]
             # 间隔取点后还有多余的丢弃
             Lines1 = newBodyLines[:save_cross_num]
-        print '间隔取点后 交叉点数 %d' % len(Lines1)
+        print u'间隔取点后 交叉点数 %d' % len(Lines1)
 
     # 近重合
     if os.path.isfile(snoxFile):
@@ -930,69 +932,17 @@ def use_ftp_getList(host, user, pawd, port, s_path, regList, ymd):
     return FileList
 
 
-def geturl(url, token=None, out=None):
-    headers = {'user-agent': 'tis/download.py_1.0--' +
-               sys.version.replace('\n', '').replace('\r', '')}
-    if not token is None:
-        headers['Authorization'] = 'Bearer ' + token
-    try:
-        if sys.version_info.major == 2:
-            import urllib2
-            try:
-                fh = urllib2.urlopen(urllib2.Request(url, headers=headers))
-                if out is None:
-                    return fh.read()
-                else:
-                    shutil.copyfileobj(fh, out)
-            except urllib2.HTTPError as e:
-                print('HTTP GET error code: %d' % e.code())
-                print('HTTP GET error message: %s' % e.message)
-            except urllib2.URLError as e:
-                print('Failed to make request: %s' % e.reason)
-            return None
-
-        else:
-            from urllib.request import urlopen, Request, URLError, HTTPError
-            try:
-                fh = urlopen(Request(url, headers=headers))
-                if out is None:
-                    return fh.read().decode('utf-8')
-                else:
-                    shutil.copyfileobj(fh, out)
-            except HTTPError as e:
-                print('HTTP GET error code: %d' % e.code())
-                print('HTTP GET error message: %s' % e.message)
-            except URLError as e:
-                print('Failed to make request: %s' % e.reason)
-            return None
-
-    except AttributeError:
-        # OS X Python 2 and 3 don't support tlsv1.1+ therefore... curl
-        import subprocess
-        try:
-            args = ['curl', '--fail', '-sS', '-L', '--get', url]
-            for (k, v) in headers.items():
-                args.extend(['-H', ': '.join([k, v])])
-            if out is None:
-                # python3's subprocess.check_output returns stdout as a byte
-                # string
-                result = subprocess.check_output(args)
-                return result.decode('utf-8') if isinstance(result, bytes) else result
-            else:
-                subprocess.call(args, stdout=out)
-        except subprocess.CalledProcessError as e:
-            print('curl GET error message: %' +
-                  (e.message if hasattr(e, 'message') else e.output))
-        return None
-
-
 def use_https_getList_MODIS(pact, host, SELF_SENSOR, user, pawd, port, s_path, regList, ymd):
 
     FileList = []
     src = pact + '://' + host + '/' + s_path
     tok = 'FEB56222-63BA-11E8-B399-F01EAE849760'  # 应用密钥
+    headers = {'user-agent': 'tis/download.py_1.0--' +
+               sys.version.replace('\n', '').replace('\r', '')}
+    headers['Authorization'] = 'Bearer ' + tok
+    fh = urllib2.urlopen(urllib2.Request('%s.csv' % src, headers=headers))
     files = [f for f in csv.DictReader(
-        StringIO(geturl('%s.csv' % src, tok)), skipinitialspace=True)]
+        StringIO(fh.read()), skipinitialspace=True)]
     for f in files:
         try:
             filesize = int(f['size'])
