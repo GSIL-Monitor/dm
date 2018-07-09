@@ -62,8 +62,8 @@ class WEBORDER01(object):
 
     def __init__(self, incfg):
 
-        self.url_open = 'https://www.class.ngdc.noaa.gov/saa/products/classlogin?resource=%2Fsaa%2Fproducts%2Fwelcome'
-        self.url_login = 'https://www.class.ngdc.noaa.gov/saa/products/j_security_check'
+        self.url_open = 'https://www.avl.class.noaa.gov/saa/products/classlogin?resource=%2Fsaa%2Fproducts%2Fwelcome'
+        self.url_login = 'https://www.avl.class.noaa.gov/saa/products/j_security_check'
         self.s = requests.Session()
         self.s.verify = False  # 取消安全认证
 
@@ -76,14 +76,14 @@ class WEBORDER01(object):
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate, br',
             'Cache-Control': 'no-cache',
-            'Host': 'www.class.ngdc.noaa.gov',
-            'Origin': 'https://www.class.ngdc.noaa.gov',
+            'Host': 'www.avl.class.noaa.gov',
+            'Origin': 'https://www.avl.class.noaa.gov',
             'Upgrade-Insecure-Requests': '1',
             'Accept-Language': 'zh-CN,zh;q=0.9',
             'Connection': 'keep-alive',
             'Pragma': 'no-cache',
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Referer': 'https://www.class.ngdc.noaa.gov/saa/products/classlogin?resource=/saa/products/welcome'}
+            'Referer': 'https://www.avl.class.noaa.gov/saa/products/classlogin?resource=%2Fsaa%2Fproducts%2Fwelcome'}
 
     def get_cookie_token(self):
         # 因为登录时需要先获取csrfToken值，所以先get获取，然后在下方post数据的时候使用。
@@ -116,11 +116,11 @@ class WEBORDER01(object):
     def get_ordernum(self, stime, etime):
         #  获取订单号
 
-        url_order = 'https://www.class.ngdc.noaa.gov/saa/prod/orderNow'
+        url_order = 'https://www.avl.class.noaa.gov/saa/prod/orderNow'
         url_type = self.inCfg.urlType
-        url_order_num = 'https://www.class.ngdc.noaa.gov/saa/products/shopping_cart'
-        url_datatime = 'https://www.class.ngdc.noaa.gov/saa/products/welcome'
-        url_email = 'https://www.class.ngdc.noaa.gov/saa/products/shop'
+        url_order_num = 'https://www.avl.class.noaa.gov/saa/products/shopping_cart'
+        url_datatime = 'https://www.avl.class.noaa.gov/saa/products/welcome'
+        url_email = 'https://www.avl.class.noaa.gov/saa/products/shop'
         self.s.headers['Referer'] = url_datatime
         req_datatime = self.s.get(url_type, timeout=self.timeout)
         # 获取对应资料的数据起始、结束时间
@@ -309,7 +309,7 @@ class WEBORDER02(object):
 
 
 if __name__ == '__main__':
-    ycfg = ReadYaml('METOP-A', 'IASI')
+    ycfg = ReadYaml('JPSS-1', 'VIIRS')
     # ycfg = ReadYaml('CALIPSO', 'CALIOP')
     if ycfg.init_type == '1':
         weborder = WEBORDER01(ycfg)
@@ -326,4 +326,4 @@ if __name__ == '__main__':
     # 20180619 02:57:09 20180619 03:03:09
 
     print 'ordernum=', Number
-    print 'METOP-A+IASI'
+    print 'JPSS-1+VIIRS'
