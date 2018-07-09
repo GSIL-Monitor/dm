@@ -4,7 +4,7 @@ web01: # 目前支持 iasi viirs cris j01
   mail: fy3gsics@kingtansin.com #1029966237@qq.com
 
   METOP-A+IASI:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI # url_type: https://www.bou.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=IASI&submit.x=21&submit.y=4
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=IASI&submit.x=22&submit.y=4 #https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI # url_type: https://www.bou.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=IASI&submit.x=21&submit.y=4
    body_data:
    - search_opt: SC
    - gid_pattern: ''
@@ -50,7 +50,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_IASI: 'on'
   METOP-B+IASI:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=IASI&submit.x=22&submit.y=4
    body_data:
    - search_opt: SC
    - gid_pattern: ''
@@ -96,7 +96,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_IASI: 'on'
   JPSS-1+CRIS2:
-   url_type:  https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
+   url_type:  https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
    body_data:
    - search_opt: SC
    - gid_pattern: ^(NPP)\d{12}$
@@ -145,7 +145,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_CRIS_SDR: 'on'
   JPSS-1+CRIS:
-   url_type:  https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
+   url_type:  https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
    body_data:
    - search_opt: SC
    - gid_pattern: ^(NPP)\d{12}$
@@ -195,7 +195,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_CRIS_SDR: 'on'
   METOP-A+GOME:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=GOME&submit.x=25&submit.y=6
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=GOME&submit.x=25&submit.y=6
    body_data:
    - search_opt: SC
    - gid_pattern: ''
@@ -239,7 +239,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_GOME: 'on'
   METOP-B+GOME:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=GOME&submit.x=25&submit.y=6
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=GOME&submit.x=25&submit.y=6
    body_data:
    - search_opt: SC
    - gid_pattern: ''
@@ -283,7 +283,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_GOME: 'on'
   NPP+CRIS2:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
    body_data:
    - search_opt: SC
    - gid_pattern: ^(NPP)\d{12}$
@@ -333,7 +333,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_CRIS_SDR: on
   NPP+CRIS:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
    body_data:
    - search_opt: SC
    - gid_pattern: ^(NPP)\d{12}$
@@ -382,7 +382,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_CRIS_SDR: 'on'
   NPP+ATMS:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=ATMS_SDR&submit.x=36&submit.y=9
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=ATMS_SDR&submit.x=36&submit.y=9
    body_data:
    - search_opt: SC
    - gid_pattern: ^(NPP)\d{12}$
@@ -431,7 +431,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_ATMS_SDR: 'on'
   NPP+VIIRS:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=VIIRS_SDR&submit.x=25&submit.y=13
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=VIIRS_SDR&submit.x=25&submit.y=13
    body_data:
    - search_opt: SC
    - gid_pattern: ^(NPP)\d{12}$
@@ -495,7 +495,7 @@ web01: # 目前支持 iasi viirs cris j01
    - cocoon-action: PlaceOrder
    - order_now_VIIRS_SDR: 'on'
   JPSS-1+VIIRS:
-   url_type: https://www.class.ngdc.noaa.gov/saa/products/search?sub_id=0&datatype_family=VIIRS_SDR&submit.x=25&submit.y=13
+   url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=VIIRS_SDR&submit.x=25&submit.y=13
    body_data:
    - search_opt: SC
    - gid_pattern: ^(NPP)\d{12}$
