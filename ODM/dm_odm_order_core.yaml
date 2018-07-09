@@ -1,7 +1,7 @@
 web01: # 目前支持 iasi viirs cris j01
-  user: 1029966237 #xuna1 
-  pawd: ys19930219 #gsicsgsics
-  mail: 1029966237@qq.com #fy3gsics@kingtansin.com
+  user: xuna1 #1029966237 
+  pawd: gsicsgsics #ys19930219
+  mail: fy3gsics@kingtansin.com #1029966237@qq.com
 
   METOP-A+IASI:
    url_type: https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI # url_type: https://www.bou.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=IASI&submit.x=21&submit.y=4
