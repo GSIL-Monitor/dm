@@ -1,22 +1,31 @@
-# coding:UTF-8
-'''
-Created on 2015年10月13日
-
-@author: 弢@kingtansin
-'''
-import sys, os
+# -*- coding: utf-8 -*-
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+import os
+import sys
+
 from configobj import ConfigObj
-from dm_sno_cross_calc_core import Sat_Orbit, runSatPassingArea, runSatPassingFixedPoint
-from dm_sno_cross_calc_core import runLEO_LEO, runGEO_LEO
+from dateutil.relativedelta import relativedelta
+
 from PB import pb_time
 from PB.CSC.pb_csc_console import LogServer
+from dm_sno_cross_calc_core import Sat_Orbit, runSatPassingArea, runSatPassingFixedPoint
+from dm_sno_cross_calc_core import runLEO_LEO, runGEO_LEO
+
+
+__description__ = u'交叉预报'
+__author__ = '弢@kingtansin'
+__date__ = '2015年10月13日'
+__version__ = '1.0.0_beat'
+
+# wangpeng modify 2018-11-26  修改固定点预报，去掉黑白的限制，改为全量预报
+
 
 def satType(satName):
     GEO_LIST = inCfg['SAT_TYPE']['GEO']
-    if satName in GEO_LIST: return 'GEO'
+    if satName in GEO_LIST:
+        return 'GEO'
     return 'LEO'
+
 
 def run(sateName, ymd):
     '''
@@ -34,7 +43,8 @@ def run(sateName, ymd):
     crossInfo = CROSS_INFO_DICT[satName]
     # 轨迹类实例
     s1 = Sat_Orbit(satName, ymd, ORBIT_DIR, Log)
-    if s1.error: return  # 如果不存在该卫星的目录则返回
+    if s1.error:
+        return  # 如果不存在该卫星的目录则返回
 
     # 过区域
     if 'area_list' in crossInfo.keys() and len(crossInfo['area_list']) > 0:
@@ -69,7 +79,8 @@ def run(sateName, ymd):
         else:
             sat_time_low = None
 
-        sat_over_sat(s1, crossInfo['sat_list'], sat_dist, sat_time_high, sat_time_low)
+        sat_over_sat(
+            s1, crossInfo['sat_list'], sat_dist, sat_time_high, sat_time_low)
 
 
 def sat_over_area(s1, area_list):
@@ -80,13 +91,15 @@ def sat_over_area(s1, area_list):
     AREA_DICT = inCfg['AREA_LIST']
     for eachArea in area_list:
         Log.info('[%-12s] [%-8s] [%-8s]' % (s1.sat, eachArea, s1.ymd))
-        crossFile = os.path.join(CROSS_DIR, '%s_%s' % (s1.sat, eachArea), '%s_%s_%s.txt' % (s1.sat, eachArea, s1.ymd))
+        crossFile = os.path.join(CROSS_DIR, '%s_%s' % (
+            s1.sat, eachArea), '%s_%s_%s.txt' % (s1.sat, eachArea, s1.ymd))
 #         # 预报文件存在则跳过
 #         if os.path.isfile(crossFile):
 #             Log.info('already exists')
 #             continue
         latlonInfo = AREA_DICT[eachArea]
         runSatPassingArea(s1, eachArea, latlonInfo, crossFile, Log)
+
 
 def sat_over_fixedpoint(s1, fix_list, fix_dist):
     '''
@@ -95,13 +108,15 @@ def sat_over_fixedpoint(s1, fix_list, fix_dist):
     CROSS_DIR = inCfg['PATH']['CROSS']
     FIX_DICT = inCfg['FIX_LIST']
     Log.info('[%-12s] [FIX] [%-8s]' % (s1.sat, s1.ymd))
-    crossFile = os.path.join(CROSS_DIR, '%s_FIX' % s1.sat, '%s_FIX_%s.txt' % (s1.sat, s1.ymd))
+    crossFile = os.path.join(
+        CROSS_DIR, '%s_FIX' % s1.sat, '%s_FIX_%s.txt' % (s1.sat, s1.ymd))
     # 预报文件存在则跳过
 #     if os.path.isfile(crossFile):
 #         Log.info('already exists')
 #         return
 
     runSatPassingFixedPoint(s1, fix_list, fix_dist, crossFile, FIX_DICT, Log)
+
 
 def sat_over_sat(s1, sat_list, sat_dist, sat_time_high, sat_time_low):
     '''
@@ -124,34 +139,41 @@ def sat_over_sat(s1, sat_list, sat_dist, sat_time_high, sat_time_low):
 #         if os.path.isfile(crossFile):
 #             Log.info('already exists')
 #             continue
-        crossFile = os.path.join(CROSS_DIR, '%s_%s' % (s1.sat, eachSat), '%s_%s_%s.txt' % (s1.sat, eachSat, s1.ymd))
+        crossFile = os.path.join(CROSS_DIR, '%s_%s' % (
+            s1.sat, eachSat), '%s_%s_%s.txt' % (s1.sat, eachSat, s1.ymd))
 #         # 预报文件存在则跳过
 #         if os.path.isfile(crossFile):
 #             Log.info('already exists')
 #             continue
 
         if satType(s1.sat) == 'LEO' and satType(eachSat) == 'LEO':
-            if sat_time_high is None: continue
-            if sat_time_low is None: continue
+            if sat_time_high is None:
+                continue
+            if sat_time_low is None:
+                continue
             if len(sat_time_high) == len(sat_time_low) == len(sat_list):
                 s2 = Sat_Orbit(eachSat, s1.ymd, ORBIT_DIR, Log)
                 if s2.error:
                     Log.error('No Orbit File of %s' % eachSat)
                     continue
-                runLEO_LEO(s1, s2, sat_dist, sat_time_high[i], sat_time_low[i], crossFile, Log)
+                runLEO_LEO(
+                    s1, s2, sat_dist, sat_time_high[i], sat_time_low[i], crossFile, Log)
             else:
-                Log.error("%s : the Length of sat_time_low, sat_time_high and sat_list are not the same!" % s1.sat)
+                Log.error(
+                    "%s : the Length of sat_time_low, sat_time_high and sat_list are not the same!" % s1.sat)
         elif satType(s1.sat) == 'GEO' and satType(eachSat) == 'LEO':
             s2 = Sat_Orbit(eachSat, s1.ymd, ORBIT_DIR, Log)
-            if s2.error: continue
+            if s2.error:
+                continue
             runGEO_LEO(s2, s1, sat_dist, crossFile, Log)
 
         elif satType(s1.sat) == 'LEO' and satType(eachSat) == 'GEO':
             s2 = Sat_Orbit(eachSat, s1.ymd, ORBIT_DIR, Log)
-            if s2.error: continue
+            if s2.error:
+                continue
             runGEO_LEO(s1, s2, sat_dist, crossFile, Log)
 
-######################### 程序全局入口 ##############################
+# 程序全局入口
 
 # 获取程序所在位置，拼接配置文件
 MainPath, MainFile = os.path.split(os.path.realpath(__file__))
@@ -217,7 +239,8 @@ elif len(args) == 0:
     # 开始滚动其余时间的所有卫星的预报计算
     for satName in satLst:
         for rdays in rolldays:
-            ymd = (datetime.utcnow() - relativedelta(days=int(rdays))).strftime('%Y%m%d')
+            ymd = (
+                datetime.utcnow() - relativedelta(days=int(rdays))).strftime('%Y%m%d')
             run(satName, ymd)
 else:
     print 'args: satName yyyymmdd-yyyymmdd'

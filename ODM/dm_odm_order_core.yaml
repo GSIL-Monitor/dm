@@ -1,7 +1,7 @@
 web01: # 目前支持 iasi viirs cris j01
   user: xuna1 #1029966237 
-  pawd: gsicsgsics #ys19930219
-  mail: fy3gsics@kingtansin.com #1029966237@qq.com
+  pawd: gsicsgsics  #ys19930219 
+  mail: fy3gsics@kingtansin.com #1029966237@qq.com 
 
   METOP-A+IASI:
    url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=IASI&submit.x=22&submit.y=4 #https://www.class.ngdc.noaa.gov/saa/products/search?datatype_family=IASI # url_type: https://www.bou.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=IASI&submit.x=21&submit.y=4
@@ -282,7 +282,7 @@ web01: # 目前支持 iasi viirs cris j01
    - deliv_checksum_opt: N
    - cocoon-action: PlaceOrder
    - order_now_GOME: 'on'
-  NPP+CRIS2:
+  NPP+CRIS: #三个传感器
    url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
    body_data:
    - search_opt: SC
@@ -332,7 +332,7 @@ web01: # 目前支持 iasi viirs cris j01
    - np_subset: N
    - cocoon-action: PlaceOrder
    - order_now_CRIS_SDR: on
-  NPP+CRIS:
+  NPP+CRIS2: #两个传感器
    url_type: https://www.avl.class.noaa.gov/saa/products/search?sub_id=0&datatype_family=CRIS_SDR&submit.x=25&submit.y=6
    body_data:
    - search_opt: SC

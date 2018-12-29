@@ -1,15 +1,4 @@
-# coding: utf-8
-__author__ = 'wangpeng'
-
-'''
-FileName:     dm_odm_order.py
-Description:  订购卫星数据
-Author:       wangpeng
-Date:         2015-08-21
-version:      1.0.0.050821_beat
-Input:        args1:开始时间-结束时间  [YYYYMMDD-YYYYMMDD]
-Output:       (^_^)
-'''
+# -*- coding: utf-8 -*-
 
 from HTMLParser import HTMLParser
 from StringIO import StringIO
@@ -32,7 +21,6 @@ import ftputil
 import paramiko
 import socks
 import threadpool
-# sys.path.append('E:\KY\git')
 
 from PB import pb_time, pb_sat, pb_name
 from PB.CSC.pb_csc_console import LogServer, SocketServer, MailServer_imap
@@ -42,12 +30,17 @@ from dm_odm_order_core import WEBORDER01, WEBORDER02, ReadYaml
 # from posixpath import join as urljoin
 socket.setdefaulttimeout(120)  # 设置访问socket连接超时时间
 
+__description__ = u'订购模块'
+__author__ = 'wangpeng'
+__date__ = '2018-05-30'
+__version__ = '1.0.0_beat'
+__updated__ = '2018-07-09'
+
 
 def run(satID, ymd):
     # 获取每个卫星，传感器的参数
     webOrder = inCfg['ORDER'][satID]['WEB_ORDER']
     areaList = inCfg['ORDER'][satID]['TARGET_AREA']
-
     # 判断订购的方式，‘YES’表示通过web进行订购，‘GOLBAL’表示订购全部，其他的表示根据限定条件进行订购
     if 'YES' in webOrder:
         OrderWebProduct(satID, ymd)
@@ -141,7 +134,7 @@ def OrderWebProduct(satID, ymd):
             # 判断ID号是否符合标准
             if is_num_by_except(ID):
                 mailFile = os.path.join(FULL_ID_DIR, ID + '.eml')
-#                 print 'mailFile    :', mailFile
+                # print 'mailFile    :', mailFile
                 WriteOrderNumber(mailFile)
                 Log.info(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 下单成功' %
                          (ymd, satID, sat, sensor, product, interval, time_range, ID))
@@ -152,7 +145,8 @@ def OrderWebProduct(satID, ymd):
         else:  # 如果已经订购过，则直接处理
             # Log.info(u'----时段: [%s] ID: [%s] ID号可用' % (time_range, ID))
             mailFile = os.path.join(FULL_ID_DIR, ID + '.eml')
-#             print 'FULL_ID_DIR is :', FULL_ID_DIR
+            # print 'FULL_ID_DIR is :', FULL_ID_DIR
+            # print  'mailFile is :',mailFile
             if os.path.isfile(mailFile) and os.path.getsize(mailFile) > 0:
                 Log.info(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] ID号可用' %
                          (ymd, satID, sat, sensor, product, interval, time_range, ID))
@@ -192,7 +186,7 @@ def OrderWebProduct(satID, ymd):
                     m.findspam()  # 垃圾邮箱无用信息，直接删掉
                     if (m.findmail()):
                         # Log.info(u'----时段: [%s] ID: [%s] 邮件已到' % (time_range, ID))
-                        m.savemail(mailFile, True)
+                        m.savemail(mailFile)
                         Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 保存邮件' % (
                             ymd, satID, sat, sensor, product, interval, time_range, ID))
                         # u'delete 订购邮件'
@@ -203,7 +197,7 @@ def OrderWebProduct(satID, ymd):
                     m.close()
                     m.logout()
                 except Exception as e:
-                    #                     print (u'mail----%s' % str(e))
+                    print (u'mail----%s' % str(e))
                     Log.error(u'---- WEB订购  [%s] [%s] %s %s %s %s 时段: [%s] ID: [%s] 获取邮件信息超时' % (
                         ymd, satID, sat, sensor, product, interval, time_range, ID))
 
@@ -215,7 +209,8 @@ def OrderWebProduct(satID, ymd):
         file_host = serverList[2]
         file_path = serverList[3]
         F_serverList.append(filename + "   " + filesize + '\n')
-        url = pact + '://' + file_host + ':' + port + file_path + '/' + filename + '\n'
+        url = pact + '://' + file_host + ':' + \
+            port + file_path + '/' + filename + '\n'
         allorderList.append(url)
 
     # 写入订单信息文件
@@ -268,6 +263,8 @@ def getftpinfo(mailFile):
                     f_path = '/' + line.split()[1].strip()
             elif 'cd' in line and ordernum in line and 'get' in line:
                 f_path = '/' + line.split()[1].strip() + '/001'
+            elif 'cd' in line and ordernum in line:
+                f_path = '/' + line.split()[1].strip() + '/001'
     return f_host, f_user, f_pawd, f_path
 
 
@@ -286,7 +283,7 @@ def is_num_by_except(satID):
     '''
     检查订单号是否合法
     '''
-    if satID == None:
+    if satID is None:
         return False
     try:
         if int(satID) > 0:
@@ -387,7 +384,6 @@ def OrderOrbitProduct(satID, ymd):
         Log.error(u'---- 选择订购  [%s] [%s] %s %s %s %s FTP清单获取失败' %
                   (ymd, satID, sat, sensor, product, interval))
         return
-    # pdb.set_trace()
     # 根据FTP列表获取文件上的时间信息和观测时长
 
     FileInfoList = GetFileInfo(F_serverList)
@@ -490,8 +486,12 @@ def ReadForecastFile_area(satID, ymd):
     '''
     timeList = []
     sat = inCfg['ORDER'][satID]['SELF_SAT']
-    satType = inCfg['ORDER'][satID]['TARGET_TIME']
     target_area = inCfg['ORDER'][satID]['TARGET_AREA']
+    target_fix_area_time = inCfg['ORDER'][satID]['TARGET_AREA_TIME']
+    dict_fix_area_time = {}
+
+    for i in xrange(len(target_area)):
+        dict_fix_area_time[target_area[i]] = target_fix_area_time[i]
 
     # 遍历区域
     for area in target_area:
@@ -508,27 +508,21 @@ def ReadForecastFile_area(satID, ymd):
                 if ymd in Line:
                     s_hms = Line.split()[1].strip()
                     e_hms = Line.split()[2].strip()
-                    s_lon = float(Line.split()[4].strip())
-                    e_lon = float(Line.split()[6].strip())
-                    cLon = (s_lon + e_lon) / 2.  # 判断此时的地区是否是白天
-                    if satType == 'ALL':
-                        #  u'全天'
-                        pass
-                    elif satType == 'DAY':
-                        if not pb_time.lonIsday(ymd, s_hms, cLon):
-                            #  u'晚上过滤掉'
-                            continue
-                    elif satType == 'NIGHT':
-                        if pb_time.lonIsday(ymd, s_hms, cLon):
-                            #  u'白天过滤掉'
-                            continue
-                    else:
-                        pass
+                    lat = float(Line.split()[3].strip())
+                    lon = float(Line.split()[4].strip())
                     s_cross_time = datetime.strptime(
                         '%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
                     e_cross_time = datetime.strptime(
                         '%s %s' % (ymd, e_hms), '%Y%m%d %H:%M:%S')
-                    timeList.append([s_cross_time, e_cross_time])
+                    sunZ = pb_sat.getasol6s(
+                        ymd, s_hms.replace(':', ''), lon, lat)
+                    dayNight = dict_fix_area_time[area]
+                    if dayNight == 'ALL':
+                        timeList.append([s_cross_time, e_cross_time])
+                    elif dayNight == 'NIGHT' and sunZ > 100:
+                        timeList.append([s_cross_time, e_cross_time])
+                    elif dayNight == 'DAY' and sunZ <= 100:
+                        timeList.append([s_cross_time, e_cross_time])
 
     return timeList
 
@@ -542,12 +536,14 @@ def ReadForecastFile_fix(satID, ymd):
     sat = inCfg['ORDER'][satID]['SELF_SAT']
     target_fix_group = inCfg['ORDER'][satID]['TARGET_FIX']
     target_fix_group_sec = inCfg['ORDER'][satID]['TARGET_FIX_SEC']
+    target_fix_group_time = inCfg['ORDER'][satID]['TARGET_FIX_TIME']
     dict_fix_group_sec = {}
+    dict_fix_group_time = {}
 
     # 固定点名和固定点的秒数对应放到字典中
     for i in xrange(len(target_fix_group)):
         dict_fix_group_sec[target_fix_group[i]] = target_fix_group_sec[i]
-
+        dict_fix_group_time[target_fix_group[i]] = target_fix_group_time[i]
     # 拼接固定点预报文件
     Filedir = sat + '_' + 'FIX'
     FileName = sat + '_' + 'FIX' + '_' + ymd + '.txt'
@@ -565,17 +561,29 @@ def ReadForecastFile_fix(satID, ymd):
                     if fix in Line and ymd in Line:
                         # 进行时间处理，交叉时间点变为时间段
                         s_hms = Line.split()[1].strip()
+                        lat = float(Line.split()[3].strip())
+                        lon = float(Line.split()[4].strip())
                         cross_time = datetime.strptime(
                             '%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
                         secs = int(dict_fix_group_sec[fix_group])
-
+                        # 时间过滤类型
+                        dayNight = dict_fix_group_time[fix_group]
+#                         print 'time filtering flag: %s' % dayNight
                         s_cross_time = cross_time - relativedelta(seconds=secs)
                         e_cross_time = cross_time + relativedelta(seconds=secs)
                         if s_cross_time.strftime('%Y%m%d') != ymd:
                             continue
                         if e_cross_time.strftime('%Y%m%d') != ymd:
                             continue
-                        timeList.append([s_cross_time, e_cross_time])
+                        sunZ = pb_sat.getasol6s(
+                            ymd, s_hms.replace(':', ''), lon, lat)
+
+                        if dayNight == 'ALL':
+                            timeList.append([s_cross_time, e_cross_time])
+                        elif dayNight == 'NIGHT' and sunZ > 100:
+                            timeList.append([s_cross_time, e_cross_time])
+                        elif dayNight == 'DAY' and sunZ <= 100:
+                            timeList.append([s_cross_time, e_cross_time])
     return timeList
 
 
@@ -587,37 +595,39 @@ def ReadForecastFile_sat(satID, ymd):
     allTimeList = []
     # 获取配置信息
     sat1 = inCfg['ORDER'][satID]['SELF_SAT']
-    satType = inCfg['ORDER'][satID]['TARGET_TIME']
     geoList = inCfg['SAT_TYPE']['GEO']
     target_sat = inCfg['ORDER'][satID]['TARGET_SAT']
     target_sat_sec = inCfg['ORDER'][satID]['TARGET_SAT_SEC']
-    target_sat_cross_num = inCfg['ORDER'][satID]['TARGET_SAT_NUM']
+#     target_sat_cross_num = inCfg['ORDER'][satID]['TARGET_SAT_NUM']
+    target_sat_time = inCfg['ORDER'][satID]['TARGET_SAT_TIME']
+    dict_sat_time = {}
     dict_sat_sec = {}
-    dict_sat_cross_num = {}
+#     dict_sat_cross_num = {}
 
     # 固定点名和固定点的秒数对应放到字典中
     for i in xrange(len(target_sat)):
         dict_sat_sec[target_sat[i]] = target_sat_sec[i]
-        dict_sat_cross_num[target_sat[i]] = target_sat_cross_num[i]
-
+#         dict_sat_cross_num[target_sat[i]] = target_sat_cross_num[i]
+        dict_sat_time[target_sat[i]] = target_sat_time[i]
     # print '！！！！！！！！！！！！！！！！！！！！！！！！！！'
 
     for sat2 in target_sat:
         sat2_secs = int(dict_sat_sec[sat2])
-        sat2_cross_num = int(dict_sat_cross_num[sat2])
+#         sat2_cross_num = int(dict_sat_cross_num[sat2])
+        dayNight = dict_sat_time[sat2]
         if sat1 in geoList or sat2 in geoList:
             timeList = ReadForecastFile_GEO_LEO(
-                sat1, sat2, sat2_secs, ymd, satType)
+                sat1, sat2, sat2_secs, dayNight, ymd)
         else:
             # 20180510 增加过滤交叉点功能，配置保留交叉点的数量target_sat_cross_num
             timeList = ReadForecastFile_LEO_LEO(
-                sat1, sat2, sat2_secs, ymd, satType, sat2_cross_num)
+                sat1, sat2, sat2_secs, dayNight, ymd)
         allTimeList.extend(timeList)
 
     return allTimeList
 
 
-def jump_cross_point(crossFile, snoxFile, save_cross_num, dayNight):
+def jump_cross_point(crossFile, snoxFile, dayNight):
     '''
     description :增加跳点功能，并返回新的交叉内容
     crossFile： 交叉预报文件
@@ -627,6 +637,7 @@ def jump_cross_point(crossFile, snoxFile, save_cross_num, dayNight):
 #     Lines = []
     Lines1 = []
     Lines2 = []
+    save_cross_num = 8  # 订购保留8个
 
     if os.path.isfile(crossFile):
 
@@ -658,18 +669,27 @@ def jump_cross_point(crossFile, snoxFile, save_cross_num, dayNight):
         lens = len(dayNightLines)
         print u'黑白过滤后 交叉点数 %d' % lens
 
+        half_cross_num = save_cross_num / 2
         if lens <= save_cross_num:
             Lines1 = dayNightLines
+            print u'<= %d, 全部保留' % save_cross_num
         else:
-            Rest = lens % save_cross_num
-            if save_cross_num - Rest == 1:  # 满足间隔取点步长增加条件
-                step = int(lens / save_cross_num) + 1
-            else:
-                step = int(lens / save_cross_num)
-            newBodyLines = dayNightLines[::step]
-            # 间隔取点后还有多余的丢弃
-            Lines1 = newBodyLines[:save_cross_num]
-        print u'间隔取点后 交叉点数 %d' % len(Lines1)
+            Lines1 = dayNightLines[:half_cross_num] + \
+                dayNightLines[-half_cross_num:]
+            print u'> %d, 保留前%d,后%d' % (save_cross_num, half_cross_num, half_cross_num)
+
+#         if lens <= save_cross_num:
+#             Lines1 = dayNightLines
+#         else:
+#             Rest = lens % save_cross_num
+#             if save_cross_num - Rest == 1:  # 满足间隔取点步长增加条件
+#                 step = int(lens / save_cross_num) + 1
+#             else:
+#                 step = int(lens / save_cross_num)
+#             newBodyLines = dayNightLines[::step]
+#             # 间隔取点后还有多余的丢弃
+#             Lines1 = newBodyLines[:save_cross_num]
+#         print '间隔取点后 交叉点数 %d' % len(Lines1)
 
     # 近重合
     if os.path.isfile(snoxFile):
@@ -681,7 +701,7 @@ def jump_cross_point(crossFile, snoxFile, save_cross_num, dayNight):
     return Lines1 + Lines2
 
 
-def ReadForecastFile_LEO_LEO(sat1, sat2, sat2_secs, ymd, satType, sat2_cross_num):
+def ReadForecastFile_LEO_LEO(sat1, sat2, sat2_secs, dayNight, ymd):
 
     # 本模块于2017-12-14添加了snox的订购。订购时应注意相同卫星对的情况下，cross与snox内卫星前后顺序是否一致。
     timeList = []
@@ -705,10 +725,11 @@ def ReadForecastFile_LEO_LEO(sat1, sat2, sat2_secs, ymd, satType, sat2_cross_num
         snoxFile = os.path.join(SNOX_DIR, Filedir, FileName2)
 
     # 读取交叉点内容并跳点
-    crossLines = jump_cross_point(crossFile, snoxFile, sat2_cross_num, satType)
+    crossLines = jump_cross_point(
+        crossFile, snoxFile, dayNight)
 
-    if crossLines == []:
-        print 'cross nums is 0'
+    if len(crossLines) == 0:
+        print u'cross nums is 0'
         return timeList
 
     for Line in crossLines:
@@ -740,7 +761,7 @@ def ReadForecastFile_LEO_LEO(sat1, sat2, sat2_secs, ymd, satType, sat2_cross_num
     return timeList
 
 
-def ReadForecastFile_GEO_LEO(sat1, sat2, sat2_secs, ymd, satType):
+def ReadForecastFile_GEO_LEO(sat1, sat2, sat2_secs, dayNight, ymd):
     timeList = []
     # match_time = ymd[0:4] + '.' + ymd[4:6] + '.' + ymd[6:8]
     # 拼接预报文件
@@ -761,22 +782,8 @@ def ReadForecastFile_GEO_LEO(sat1, sat2, sat2_secs, ymd, satType):
         if ymd in Line:  # 订购日期所在行
             s_hms = Line.split()[1].strip()
             e_hms = Line.split()[2].strip()
-            s_lon = float(Line.split()[4].strip())
-            e_lon = float(Line.split()[6].strip())
-            cLon = (s_lon + e_lon) / 2.  # 判断此时的地区是否是白天
-            if satType == 'ALL':
-                #  u'全天'
-                pass
-            elif satType == 'DAY':
-                if not pb_time.lonIsday(ymd, s_hms, cLon):
-                    #  u'晚上过滤掉'
-                    continue
-            elif satType == 'NIGHT':
-                if pb_time.lonIsday(ymd, s_hms, cLon):
-                    #  u'白天过滤掉'
-                    continue
-            else:
-                pass
+            lat = float(Line.split()[3].strip())
+            lon = float(Line.split()[4].strip())
             cross_time1 = datetime.strptime(
                 '%s %s' % (ymd, s_hms), '%Y%m%d %H:%M:%S')
             cross_time2 = datetime.strptime(
@@ -788,7 +795,15 @@ def ReadForecastFile_GEO_LEO(sat1, sat2, sat2_secs, ymd, satType):
                 continue
             if e_cross_time.strftime('%Y%m%d') != ymd:
                 continue
-            timeList.append([s_cross_time, e_cross_time])
+            sunZ = pb_sat.getasol6s(
+                ymd, s_hms.replace(':', ''), lon, lat)
+
+            if dayNight == 'ALL':
+                timeList.append([s_cross_time, e_cross_time])
+            elif dayNight == 'NIGHT' and sunZ > 100:
+                timeList.append([s_cross_time, e_cross_time])
+            elif dayNight == 'DAY' and sunZ <= 100:
+                timeList.append([s_cross_time, e_cross_time])
     return timeList
 
 
@@ -900,6 +915,7 @@ def use_ftp_getList(host, user, pawd, port, s_path, regList, ymd):
     FileList = []
 
     class MySession(ftplib.FTP):
+
         def __init__(self, FTP, userid, password, port):
             """Act like ftplib.FTP's constructor but connect to another port."""
             ftplib.FTP.__init__(self)
@@ -917,7 +933,7 @@ def use_ftp_getList(host, user, pawd, port, s_path, regList, ymd):
                 if m is not None:
                     nameClass = pb_name.nameClassManager()
                     info = nameClass.getInstance(name)
-                    if info == None:
+                    if info is None:
                         continue
                     if info.dt_s.strftime('%Y%m%d') != ymd:
                         continue
@@ -974,7 +990,7 @@ def use_http_getList(pact, host, user, pawd, port, s_path, regList, ymd):
                 try:
                     nameClass = pb_name.nameClassManager()
                     info = nameClass.getInstance(Name)
-                    if info == None:
+                    if info is None:
                         continue
                     if info.dt_s.strftime('%Y%m%d') != ymd:
                         continue
@@ -1092,7 +1108,7 @@ def GetFileInfo(FtpList):
         Filename = ftpList.split()[0].strip()
         nameClass = pb_name.nameClassManager()
         info = nameClass.getInstance(Filename)
-        if info == None:
+        if info is None:
             continue
 
         FileInfoList.append([Filename, info.dt_s, info.dt_e])
@@ -1119,8 +1135,7 @@ def WriteFile(filename, lines):
     fp.close()
 
 
-######################### 程序全局入口 ##############################
-# 获取程序参数接口
+# 程序全局入口 ##############################
 args = sys.argv[1:]
 help_info = \
     u'''
@@ -1208,7 +1223,6 @@ if len(args) == 2:
     NumDateDict2 = {}
     # 定义参数List，传参给线程池
     args_List = []
-
     while date_s <= date_e:
         # 时间转换
         ymd = date_s.strftime('%Y%m%d')
